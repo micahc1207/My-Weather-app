@@ -1,0 +1,114 @@
+import requests
+import tkinter as tk
+
+
+
+#Create GUI window
+window = tk.Tk()
+
+
+
+
+#API Key to use open weather map API. Putting Key in text file to call and read so key is not displayed
+open_file = open("api_key.txt",'r')
+API_KEY = open_file.readline()
+
+
+
+
+#Set first frame that will contain the Title
+frame_a = tk.Frame(master=window , width=200, relief=tk.RAISED, borderwidth=5 , height=20, bg="skyblue")
+title_label= tk.Label(master=frame_a, text="Cool Vibes Weather App", bg="skyblue")
+title_label.pack(fill=tk.BOTH, expand=True)
+
+
+
+#set second frame for City
+frame_b = tk.Frame(master=window,  width= 30, height=20, bg="skyblue")
+
+#set third frame for state
+frame_c = tk.Frame(master=window,  width= 30, height=20, bg="skyblue")
+
+#set fourth frame for enter button and output text
+frame_d = tk.Frame(master=window,  width= 200, height=75, bg="skyblue")
+
+
+
+
+#Set label and entry boxes for city and state for user and then output text box
+city_label = tk.Label(master=frame_b, text="Enter a city", bg="skyblue")
+state_label = tk.Label(master=frame_c, text= "Enter a state",bg="skyblue")
+city_entry = tk.Entry(master=frame_b, width=8)
+state_entry = tk.Entry(master=frame_c, width=8)
+output = tk.Text(master=frame_d,height=10,bg="skyblue")
+
+
+#Define function to call for gathering data
+def enter():
+    output.delete(tk.END)
+    city = city_entry.get() #---Get city entered
+    state = state_entry.get() #---Get state entered
+
+    #API Call to grab lat and lon of cordinates for next API
+    url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state}&limit=5&appid={API_KEY}&units=imperial"
+
+    #Get API data from URL
+    response = requests.get(url)
+
+    #Put in JSON format to get parameters and values to pull
+    post = response.json()
+
+    #Parse lat and lon from JSON data
+    for data in post:
+        if data['state'] == str(state):
+            lat = data['lat']
+            lon = data['lon']
+    
+        
+   
+    #API call to call weather given the lat and lon from last call
+    weather_url = f"https://api.openweathermap.org/data/3.0/onecall/overview?lat={lat}&lon={lon}&appid={API_KEY}&units=imperial"
+
+    #Get API data from weather URL
+    new_response = requests.get(weather_url)
+
+    #Put in JSON format to get parameters and values to pull
+    new_post = new_response.json()
+
+    #Grab current date
+    date = new_post['date']
+
+    #Grab current weather forecast
+    weather = new_post['weather_overview']
+
+    #Populate output box with values
+    output.insert("1.0",f"{city}, {state}") #city and state
+    output.insert("2.0",f"\n{date}")  #date
+    output.insert("3.0",f"\n{weather}") #forecast
+
+
+
+#create "Enter" button to call enter function
+enter_button = tk.Button(master=frame_d,relief=tk.RAISED,command=enter,bg="Yellow",text="Enter")
+
+#pack labels, entries, and output box onto the respective frames
+city_label.pack(fill=tk.BOTH,side=tk.LEFT,expand=True)
+city_entry.pack(fill=tk.BOTH,expand=True)
+state_label.pack(fill=tk.BOTH,side=tk.LEFT,expand=True)
+state_entry.pack(fill=tk.BOTH,side=tk.BOTTOM,expand=True)
+enter_button.pack(fill=tk.BOTH,side=tk.TOP,expand=True)
+output.pack(fill=tk.BOTH,expand=True)
+
+#Pack frames on to window
+frame_a.pack(fill=tk.BOTH,  expand=True)           
+frame_b.pack(fill=tk.BOTH,  expand=True)
+
+frame_c.pack(fill=tk.BOTH,  expand=True)
+
+frame_d.pack(fill=tk.BOTH, expand=True)
+
+
+
+
+#execute code
+window.mainloop()
